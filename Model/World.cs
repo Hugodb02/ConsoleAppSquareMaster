@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleAppSquareMaster
+namespace ConsoleAppSquareMaster.Model
 {
     public class World
     {
@@ -18,27 +18,27 @@ namespace ConsoleAppSquareMaster
            * the chance of extending is determined by the value chanceExtra and is expressed as a possibility between 0 and maxRandom
            * the chance of decreasing the column is expressed by the value chanceLess
            */
-        public bool[,] BuildWorld1(int maxy,int maxx)
-        {          
-            int dx=maxx;
-            int dy=maxy;
-            bool[,] squares=new bool[dx,dy];
+        public bool[,] BuildWorld1(int maxy, int maxx)
+        {
+            int dx = maxx;
+            int dy = maxy;
+            bool[,] squares = new bool[dx, dy];
             int y1 = random.Next(dy);
             int y2 = random.Next(dy);
-            int yb = Math.Min(y1,y2);
-            int ye = Math.Max(y1,y2);
+            int yb = Math.Min(y1, y2);
+            int ye = Math.Max(y1, y2);
             for (int i = 0; i < dx; i++)
             {
-                for(int j=yb;j<ye;j++) squares[i,j] = true;
+                for (int j = yb; j < ye; j++) squares[i, j] = true;
                 switch (build())
                 {
-                    case 1: if (yb>0) yb--; break;
-                    case -1: if (yb<maxy) yb++; break;
+                    case 1: if (yb > 0) yb--; break;
+                    case -1: if (yb < maxy) yb++; break;
                 }
                 switch (build())
                 {
-                    case 1: if (ye<maxy) ye++; break;
-                    case -1: if (ye>0) ye--; break;
+                    case 1: if (ye < maxy) ye++; break;
+                    case -1: if (ye > 0) ye--; break;
                 }
                 if (ye < yb) break;
             }
@@ -52,39 +52,39 @@ namespace ConsoleAppSquareMaster
              * if the new element is within the boundary of the map and not already chosen then it is added to the list
              * this procedure will be repeated until the required coverage is reached
              */
-        public bool[,] BuildWorld2(int maxy,int maxx,double coverage)
+        public bool[,] BuildWorld2(int maxy, int maxx, double coverage)
         {
-            
+
             bool[,] squares = new bool[maxx, maxy];
             int seeds = 5;
-            int coverageRequired =(int)(coverage*maxx*maxy);//procent
+            int coverageRequired = (int)(coverage * maxx * maxy);//procent
             int currentCoverage = 0;
             int x, y;
             List<(int, int)> list = new();
-            for(int i = 0;i<seeds;i++)
+            for (int i = 0; i < seeds; i++)
             {
-                x=random.Next(maxx); y=random.Next(maxy);
+                x = random.Next(maxx); y = random.Next(maxy);
                 if (!list.Contains((x, y))) { list.Add((x, y)); currentCoverage++; squares[x, y] = true; }
 
             }
             int index;
             int direction;//0-right,1-left,2-top,3-bottom
-            while(currentCoverage < coverageRequired)
+            while (currentCoverage < coverageRequired)
             {
-                index=random.Next(list.Count);
+                index = random.Next(list.Count);
                 direction = random.Next(4);
                 switch (direction)
                 {
                     case 0:
-                        if ((list[index].Item1 < maxx - 1) && !squares[list[index].Item1 + 1, list[index].Item2]) 
+                        if (list[index].Item1 < maxx - 1 && !squares[list[index].Item1 + 1, list[index].Item2])
                         {
                             squares[list[index].Item1 + 1, list[index].Item2] = true;
                             list.Add((list[index].Item1 + 1, list[index].Item2));
-                            currentCoverage++; 
+                            currentCoverage++;
                         }
                         break;
                     case 1:
-                        if ((list[index].Item1 > 0) && !squares[list[index].Item1 - 1, list[index].Item2])
+                        if (list[index].Item1 > 0 && !squares[list[index].Item1 - 1, list[index].Item2])
                         {
                             squares[list[index].Item1 - 1, list[index].Item2] = true;
                             list.Add((list[index].Item1 - 1, list[index].Item2));
@@ -92,15 +92,15 @@ namespace ConsoleAppSquareMaster
                         }
                         break;
                     case 2:
-                        if ((list[index].Item2 < maxy - 1) && !squares[list[index].Item1, list[index].Item2 + 1])
+                        if (list[index].Item2 < maxy - 1 && !squares[list[index].Item1, list[index].Item2 + 1])
                         {
-                            squares[list[index].Item1, list[index].Item2 + 1]=true;
+                            squares[list[index].Item1, list[index].Item2 + 1] = true;
                             list.Add((list[index].Item1, list[index].Item2 + 1));
                             currentCoverage++;
                         }
                         break;
                     case 3:
-                        if ((list[index].Item2 > 0) && !squares[list[index].Item1, list[index].Item2 - 1])
+                        if (list[index].Item2 > 0 && !squares[list[index].Item1, list[index].Item2 - 1])
                         {
                             squares[list[index].Item1, list[index].Item2 - 1] = true;
                             list.Add((list[index].Item1, list[index].Item2 - 1));
@@ -108,7 +108,7 @@ namespace ConsoleAppSquareMaster
                         }
                         break;
                 }
-            }            
+            }
             return squares;
         }
         /* e.g. with a value of 10 for maxRandom an a value of 6 for chanceExtra and 3 for chanceLess
@@ -122,6 +122,18 @@ namespace ConsoleAppSquareMaster
             if (x > chanceExtra) return 1;
             if (x < chanceLess) return -1;
             return 0;
+        }
+        public static double CalculateCoverage(bool[,] worldGrid)               // Aangezien Buildworld1 geen covereage heeft moet ik het berekenen
+        {
+            int totalCells = worldGrid.GetLength(0) * worldGrid.GetLength(1);
+            int occupiedCells = 0;
+
+            foreach (var cell in worldGrid)
+            {
+                if (cell) occupiedCells++;
+            }
+
+            return (double)occupiedCells / totalCells * 100; // Resultaat in percentage
         }
     }
 }
