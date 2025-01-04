@@ -1,50 +1,48 @@
 ﻿using ConsoleAppSquareMaster.Strategies;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ConsoleAppSquareMaster.Model
 {
     public class WorldConquer
     {
-        /* world indicates whether the grid cell on coordinate x,y is part of the world or not*/
-        private bool[,] world;
-        /* the values in worldempires are -1 if not part of the world, 0 if part of the world but not conquered by any empire, any other positive value indicates the empire (id) the grid cell belongs to
-         */
-        private int[,] worldempires;
-        private int maxx, maxy;
-        private Random random = new Random(1);
+        private readonly bool[,] world;
+        private readonly int[,] worldempires;
 
         public WorldConquer(bool[,] world)
         {
             this.world = world;
-            maxx = world.GetLength(0);
-            maxy = world.GetLength(1);
-            worldempires = new int[maxx, maxy];
-            for (int i = 0; i < world.GetLength(0); i++)
-                for (int j = 0; j < world.GetLength(1); j++)
-                    if (world[i, j])
-                        worldempires[i, j] = 0;
-                    else
-                        worldempires[i, j] = -1;
+            int maxX = world.GetLength(0);
+            int maxY = world.GetLength(1);
+            worldempires = new int[maxX, maxY];
+
+            for (int x = 0; x < maxX; x++)
+            {
+                for (int y = 0; y < maxY; y++)
+                {
+                    worldempires[x, y] = world[x, y] ? 0 : -1;
+                }
+            }
         }
 
-        public int[,] Conquer1(int nEmpires, int turns)
+        public async Task<int[,]> ConquerAsync(List<Empire> empires, int turns)
         {
-            IConquerStrategy strategy = new Conquer1Strategy();
-            return strategy.Conquer(world, worldempires, nEmpires, turns);
-        }
+            var tasks = new List<Task>();
 
-        public int[,] Conquer2(int nEmpires, int turns)
-        {
-            IConquerStrategy strategy = new Conquer2Strategy();
-            return strategy.Conquer(world, worldempires, nEmpires, turns);
-        }
+            foreach (var empire in empires)
+            {
+                tasks.Add(Task.Run(() =>
+                {
+                    var strategy = ConquerStrategyFactory.GetStrategy(empire.Strategy);
+                    strategy.Conquer(world, worldempires, empire.Id, empire.StartPosition, turns);
+                }));
+            }
 
-        public int[,] Conquer3(int nEmpires, int turns)
-        {
-            IConquerStrategy strategy = new Conquer3Strategy();
-            return strategy.Conquer(world, worldempires, nEmpires, turns);
-        }
+            await Task.WhenAll(tasks);
 
+            return worldempires;
+        }
     }
 }

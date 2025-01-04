@@ -135,5 +135,23 @@ namespace ConsoleAppSquareMaster.Model
 
             return (double)occupiedCells / totalCells * 100; // Resultaat in percentage
         }
+        public (int, int) GetValidStartPosition(bool[,] world)
+        {
+            int maxX = world.GetLength(0);
+            int maxY = world.GetLength(1);
+            Random random = new Random();
+
+            while (true)
+            {
+                int x = random.Next(maxX);
+                int y = random.Next(maxY);
+
+                if (world[x, y]) // Controleer of de positie geldig is (niet zwart)
+                {
+                    return (x, y);
+                }
+            }
+        }
+
     }
 }

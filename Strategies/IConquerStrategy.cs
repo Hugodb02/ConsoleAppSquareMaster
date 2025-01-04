@@ -8,7 +8,7 @@ namespace ConsoleAppSquareMaster.Strategies
 {
     public interface IConquerStrategy
     {
-        int[,] Conquer(bool[,] world, int[,] worldempires, int empireId, int turns);
+        void Conquer(bool[,] world, int[,] worldempires, int empireId, (int x, int y) startPosition, int turns);
     }
 
 }

@@ -1,89 +1,50 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConsoleAppSquareMaster.Strategies
 {
     public class Conquer1Strategy : IConquerStrategy
     {
-        public int[,] Conquer(bool[,] world, int[,] worldempires, int empireId, int turns)
+        public void Conquer(bool[,] world, int[,] worldempires, int empireId, (int x, int y) startPosition, int turns)
         {
-            int maxx = world.GetLength(0);
-            int maxy = world.GetLength(1);
-            Random random = new Random();
+            var (startX, startY) = startPosition;
 
-            Dictionary<int, List<(int, int)>> empires = new(); // Empire ID -> List of owned cells
-            int x, y;
-
-            // Initialisatie: zoek startposities
-            for (int i = 0; i < empireId; i++)
+            for (int t = 0; t < turns; t++)
             {
-                bool ok = false;
-                while (!ok)
+                // Start de uitbreiding vanaf de startpositie
+                for (int x = 0; x < world.GetLength(0); x++)
                 {
-                    x = random.Next(maxx);
-                    y = random.Next(maxy);
-                    if (world[x, y] && worldempires[x, y] == 0)
+                    for (int y = 0; y < world.GetLength(1); y++)
                     {
-                        ok = true;
-                        worldempires[x, y] = i + 1;
-                        empires.Add(i + 1, new List<(int, int)> { (x, y) });
-                    }
-                }
-            }
-
-            // Iteratieve verovering
-            int index;
-            int direction;
-            for (int i = 0; i < turns; i++)
-            {
-                for (int e = 1; e <= empireId; e++)
-                {
-                    if (empires[e].Count > 0)
-                    {
-                        index = random.Next(empires[e].Count);
-                        direction = random.Next(4);
-                        x = empires[e][index].Item1;
-                        y = empires[e][index].Item2;
-
-                        switch (direction)
+                        if (worldempires[x, y] == empireId)
                         {
-                            case 0:
-                                if (x < maxx - 1 && worldempires[x + 1, y] == 0)
-                                {
-                                    worldempires[x + 1, y] = e;
-                                    empires[e].Add((x + 1, y));
-                                }
-                                break;
-                            case 1:
-                                if (x > 0 && worldempires[x - 1, y] == 0)
-                                {
-                                    worldempires[x - 1, y] = e;
-                                    empires[e].Add((x - 1, y));
-                                }
-                                break;
-                            case 2:
-                                if (y < maxy - 1 && worldempires[x, y + 1] == 0)
-                                {
-                                    worldempires[x, y + 1] = e;
-                                    empires[e].Add((x, y + 1));
-                                }
-                                break;
-                            case 3:
-                                if (y > 0 && worldempires[x, y - 1] == 0)
-                                {
-                                    worldempires[x, y - 1] = e;
-                                    empires[e].Add((x, y - 1));
-                                }
-                                break;
+                            TryExpand(world, worldempires, empireId, x, y);
                         }
                     }
                 }
-            }
 
-            return worldempires;
+                // Zorg ervoor dat de startpositie blijft bezet door het empire
+                worldempires[startX, startY] = empireId;
+            }
+        }
+
+        private void TryExpand(bool[,] world, int[,] worldempires, int empireId, int x, int y)
+        {
+            int[] dx = { -1, 1, 0, 0 };
+            int[] dy = { 0, 0, -1, 1 };
+
+            for (int i = 0; i < 4; i++)
+            {
+                int newX = x + dx[i];
+                int newY = y + dy[i];
+
+                if (newX >= 0 && newX < world.GetLength(0) &&
+                    newY >= 0 && newY < world.GetLength(1) &&
+                    world[newX, newY] &&
+                    worldempires[newX, newY] == 0)
+                {
+                    worldempires[newX, newY] = empireId;
+                }
+            }
         }
     }
 }
